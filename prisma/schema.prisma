@@ -1,0 +1,32 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id          Int       @id @default(autoincrement())
+  title       String?
+  description String?
+  authorName  String
+  uploadDate  DateTime  // 학생이 폼에서 선택한 날짜
+  imageUrl    String?
+  createdAt   DateTime  @default(now())
+  comments    Comment[]
+}
+
+model Comment {
+  id          Int      @id @default(autoincrement())
+  postId      Int
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorName  String
+  content     String
+  commentDate DateTime @default(now()) // 작성자가 선택한 댓글 날짜
+  createdAt   DateTime @default(now())
+}
