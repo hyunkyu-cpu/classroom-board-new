@@ -4,14 +4,22 @@ import { useState, FormEvent, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+interface Folder {
+  id: number
+  name: string
+  color: string
+}
+
 export default function UploadPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [userName, setUserName] = useState('')
+  const [folders, setFolders] = useState<Folder[]>([])
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     uploadDate: new Date().toISOString().split('T')[0], // 오늘 날짜를 기본값으로
+    folderId: '',
   })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -26,6 +34,12 @@ export default function UploadPage() {
         }
       })
       .catch((error) => console.error('Error fetching user:', error))
+
+    // 폴더 목록 가져오기
+    fetch('/api/folders')
+      .then((res) => res.json())
+      .then((data) => setFolders(data))
+      .catch((error) => console.error('Error fetching folders:', error))
   }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +90,7 @@ export default function UploadPage() {
           ...formData,
           authorName: userName,
           imageUrl,
+          folderId: formData.folderId ? parseInt(formData.folderId) : null,
         }),
       })
 
@@ -147,6 +162,29 @@ export default function UploadPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="내용을 입력하세요"
             />
+          </div>
+
+          {/* 폴더 선택 */}
+          <div>
+            <label htmlFor="folder" className="block text-sm font-medium text-gray-700 mb-1">
+              폴더 선택 (선택사항)
+            </label>
+            <select
+              id="folder"
+              value={formData.folderId}
+              onChange={(e) => setFormData({ ...formData, folderId: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">폴더 없음</option>
+              {folders.map((folder) => (
+                <option key={folder.id} value={folder.id}>
+                  {folder.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              게시물을 특정 폴더에 분류할 수 있습니다.
+            </p>
           </div>
 
           {/* 올린 날짜 (선택) */}

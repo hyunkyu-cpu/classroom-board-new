@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import FolderManager from '@/components/FolderManager'
 
 type Post = {
   id: number
@@ -13,12 +14,15 @@ type Post = {
   imageUrl: string | null
   createdAt: string
   comments: any[]
+  folderId: number | null
 }
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([])
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [userRole, setUserRole] = useState('')
+  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchPosts()
@@ -33,6 +37,15 @@ export default function Home() {
       })
       .catch((error) => console.error('Error fetching user:', error))
   }, [])
+
+  useEffect(() => {
+    // 폴더별 필터링
+    if (selectedFolderId === null) {
+      setFilteredPosts(posts)
+    } else {
+      setFilteredPosts(posts.filter(post => post.folderId === selectedFolderId))
+    }
+  }, [selectedFolderId, posts])
 
   const fetchPosts = async () => {
     try {
@@ -98,9 +111,21 @@ export default function Home() {
         </Link>
       </div>
 
-      {posts.length === 0 ? (
+      {/* 폴더 관리 (교사만 보임) */}
+      {userRole === 'teacher' && (
+        <FolderManager
+          onSelectFolder={setSelectedFolderId}
+          selectedFolderId={selectedFolderId}
+        />
+      )}
+
+      {filteredPosts.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
-          <p className="text-gray-500">아직 게시물이 없습니다.</p>
+          <p className="text-gray-500">
+            {selectedFolderId === null
+              ? '아직 게시물이 없습니다.'
+              : '이 폴더에 게시물이 없습니다.'}
+          </p>
           <Link
             href="/upload"
             className="text-blue-600 hover:underline mt-2 inline-block"
@@ -110,7 +135,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((post) => (
+          {filteredPosts.map((post) => (
             <div key={post.id} className="relative">
               <Link
                 href={`/posts/${post.id}`}

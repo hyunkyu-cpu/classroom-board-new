@@ -11,6 +11,15 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model Folder {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  color       String   @default("#3B82F6") // 폴더 색상
+  createdAt   DateTime @default(now())
+  posts       Post[]
+}
+
 model Post {
   id          Int       @id @default(autoincrement())
   title       String?
@@ -18,6 +27,8 @@ model Post {
   authorName  String
   uploadDate  DateTime  // 학생이 폼에서 선택한 날짜
   imageUrl    String?
+  folderId    Int?      // 폴더 ID (선택사항)
+  folder      Folder?   @relation(fields: [folderId], references: [id], onDelete: SetNull)
   createdAt   DateTime  @default(now())
   comments    Comment[]
 }
